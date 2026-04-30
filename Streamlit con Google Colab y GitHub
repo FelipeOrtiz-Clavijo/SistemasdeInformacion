@@ -1,0 +1,221 @@
+
+GitHub (codigo) -> Google Colab (ejecucion) -> Streamlit (app web) -> OBS/Loom (grabacion)
+
+---
+
+## FASE 1 - Preparar el repositorio en GitHub
+
+### Paso 1.1 - Crear el repositorio
+
+1. Ve a github.com e inicia sesion.
+2. Clic en "New repository" (boton verde arriba a la derecha).
+3. Configura:
+   - Repository name: clase-streamlit
+   - Visibility: Public
+   - Marca "Add a README file"
+4. Clic en "Create repository".
+
+### Paso 1.2 - Estructura de archivos recomendada
+
+clase-streamlit/
+|-- README.md
+|-- requirements.txt
+|-- app.py
+|-- data/
+    |-- datos.csv  (opcional)
+
+### Paso 1.3 - Crear requirements.txt
+
+En GitHub, crea el archivo requirements.txt con:
+
+    streamlit
+    pandas
+    matplotlib
+    plotly
+    numpy
+
+### Paso 1.4 - Crear app.py (ejemplo base)
+
+    import streamlit as st
+    import pandas as pd
+    import numpy as np
+
+    st.set_page_config(page_title="Mi Clase de Streamlit", page_icon="🎓")
+
+    st.title("Clase: Introduccion a Streamlit")
+    st.markdown("Bienvenidos a esta clase en vivo.")
+
+    st.sidebar.header("Configuracion")
+    nombre = st.sidebar.text_input("Tu nombre:", "Estudiante")
+
+    st.header(f"Hola, {nombre}!")
+
+    st.subheader("Ejemplo: Grafico Interactivo")
+    n = st.slider("Numero de puntos:", 10, 200, 50)
+    datos = pd.DataFrame(np.random.randn(n, 2), columns=["X", "Y"])
+    st.line_chart(datos)
+
+---
+
+## FASE 2 - Configurar Google Colab
+
+### Paso 2.1 - Abrir un nuevo notebook
+
+1. Ve a colab.research.google.com
+2. Clic en "Nuevo notebook"
+3. Renonbralo: Clase_Streamlit_Setup.ipynb
+
+### Paso 2.2 - Celda 1: Clonar el repositorio
+
+    !git clone https://github.com/TU_USUARIO/clase-streamlit.git
+    %cd clase-streamlit
+
+IMPORTANTE: Reemplaza TU_USUARIO con tu nombre de usuario de GitHub.
+
+### Paso 2.3 - Celda 2: Instalar dependencias
+
+    !pip install -r requirements.txt -q
+
+### Paso 2.4 - Celda 3: Instalar localtunnel
+
+    !npm install -g localtunnel -q
+
+### Paso 2.5 - Celda 4: Lanzar Streamlit en segundo plano
+
+    import subprocess, threading, time
+
+    def run_streamlit():
+        subprocess.run(["streamlit", "run", "app.py",
+                        "--server.port", "8501",
+                        "--server.headless", "true",
+                        "--server.runOnSave", "true"])
+
+    t = threading.Thread(target=run_streamlit)
+    t.daemon = True
+    t.start()
+    time.sleep(5)
+    print("Streamlit iniciado en puerto 8501")
+
+### Paso 2.6 - Celda 5: Obtener la URL publica
+
+    import urllib.request
+    ip = urllib.request.urlopen('https://ipv4.icanhazip.com').read().decode('utf8').strip()
+    print(f"IP del servidor: {ip}")
+
+Luego en otra celda:
+
+    !lt --port 8501
+
+Esto genera una URL como https://xxxx.loca.lt — esa es la URL de tu app.
+
+### Alternativa con pyngrok (mas estable)
+
+    !pip install pyngrok -q
+    from pyngrok import ngrok
+
+    ngrok.set_auth_token("TU_AUTHTOKEN_DE_NGROK")
+    public_url = ngrok.connect(8501)
+    print(f"Tu app esta en: {public_url}")
+
+Para obtener el authtoken: crea cuenta gratis en ngrok.com -> Dashboard -> "Your Authtoken"
+
+---
+
+## FASE 3 - Editar codigo en vivo durante la clase
+
+### Opcion A - Editar directo en Colab (mas simple)
+
+    %%writefile app.py
+
+    import streamlit as st
+
+    st.title("Clase en Vivo - Tema del Dia")
+
+    # Aqui vas agregando codigo en vivo
+    st.write("Hola desde la clase!")
+
+Cada vez que ejecutas la celda, el archivo se actualiza y Streamlit recarga.
+
+### Opcion B - Editar en GitHub y hacer pull (mas profesional)
+
+1. Edita app.py directamente en GitHub desde el navegador.
+2. En Colab ejecuta: !git pull origin main
+3. Streamlit recargara los cambios automaticamente.
+
+### Reiniciar Streamlit si algo falla
+
+    import os, subprocess, threading, time
+
+    os.system("pkill -f streamlit")
+    time.sleep(2)
+
+    def run_streamlit():
+        subprocess.run(["streamlit", "run", "app.py",
+                        "--server.port", "8501",
+                        "--server.headless", "true",
+                        "--server.runOnSave", "true"])
+
+    t = threading.Thread(target=run_streamlit)
+    t.daemon = True
+    t.start()
+    print("Streamlit reiniciado")
+
+---
+
+## FASE 4 - Grabar la pantalla
+
+### Opcion A - OBS Studio (mejor calidad, recomendado)
+
+1. Descarga en obsproject.com e instala.
+2. Abre OBS -> "+" en Fuentes -> "Captura de pantalla".
+3. Selecciona la ventana del navegador con tu app.
+4. Clic "Iniciar grabacion".
+5. El video se guarda en tu carpeta de Videos.
+
+Configuracion recomendada en OBS:
+- Resolucion: 1920x1080
+- FPS: 30
+- Formato: MP4
+- Bitrate de video: 4000 Kbps
+
+### Opcion B - Loom (mas rapido, sin configuracion)
+
+1. Instala la extension de Chrome desde loom.com.
+2. Clic en el icono de Loom -> "Screen + Cam".
+3. Selecciona la ventana del navegador.
+4. Clic "Start Recording".
+5. Al terminar, obtienes un link para compartir directamente.
+
+### Opcion C - Grabacion nativa (sin instalar nada)
+
+- Windows: Win + G (Xbox Game Bar)
+- Mac: Cmd + Shift + 5
+- Linux: Kazam o Gnome Screenshot Tool
+
+---
+
+## FASE 5 - Guardar el trabajo al terminar
+
+### Subir cambios a GitHub desde Colab
+
+    import os
+
+    # Configurar git (solo la primera vez)
+    os.system('git config --global user.email "tu@email.com"')
+    os.system('git config --global user.name "Tu Nombre"')
+
+    # Agregar, commitear y subir
+    os.system('git add .')
+    os.system('git commit -m "Clase: tema del dia"')
+    os.system('git push origin main')
+
+NOTA: Para hacer push necesitas autenticarte con un Personal Access Token de GitHub
+en lugar de tu contrasena.
+
+### Como crear un Personal Access Token en GitHub:
+
+1. GitHub -> tu foto de perfil -> Settings
+2. Menu izquierdo -> Developer settings -> Personal access tokens -> Tokens (classic)
+3. "Generate new token" -> marca el permiso "repo"
+4. Copia el token (solo se muestra una vez, guardalo bien)
+5. Cuando git te pida contrasena, pega el token
